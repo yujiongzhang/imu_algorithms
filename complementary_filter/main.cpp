@@ -1,6 +1,6 @@
 #define VERSION 4
 
-#include "MahonyAHRS.h"
+#include "complementary_filter.h"
 #include <algorithm>
 #include<stdio.h>
 #include<wchar.h>
@@ -13,6 +13,7 @@
 #include <time.h> 
 #include <math.h>
 using namespace std;
+using namespace imu_tools;
 
 #define _EULER_GT 1 //data中是否有输出的角度
 
@@ -53,7 +54,9 @@ void f(string inputfile,string outputfile)
 		// double q0 = 0,q1 = 0,q2=0,q3=0;
 		double pitch = 0,roll = 0,yaw = 0;
 		double wx_bias = 0,wy_bias = 0,wz_bias = 0;
+		double q0,q1,q2,q3;
 
+		ComplementaryFilter filter;
 
 		fgets(line, MAX_LINE, fp);//先把第一行读掉
 		outedit<<"时间"<<','<<"pitch"<<','<<"roll"<<','<<"yaw"<<','<<"gyroX_bias"<<','<<"gyroY_bias"<<','<<"gyroZ_bias"<<','<<endl;//输出表格的第一行定义
@@ -80,13 +83,15 @@ void f(string inputfile,string outputfile)
 			gyroZgt = atof(strtok( NULL, delims ));
 			#endif
 
-			MahonyAHRSupdateIMU(gyroXrad,gyroYrad,gyroZrad,accX,accY,accZ);
+			filter.update(accX,accY,accZ,gyroXrad,gyroYrad,gyroZrad,dlta_time);
+
+			filter.getOrientation(q0,q1,q2,q3);
 
 			quaternion2Euler(q0,q1,q2,q3,&pitch,&roll,&yaw);
 
             outedit<<time<<','<<pitch<<','<<roll<<','<<yaw<<','<<wx_bias<<','<<wy_bias<<','<<wz_bias;
 
-			#if _EULER_GTZ
+			#if _EULER_GT
 			outedit<<','<<gyroXgt<<','<<gyroYgt<<','<<gyroZgt;
 			#endif
 			
@@ -104,7 +109,7 @@ int main(int argc, char* argv[])
 	string inputfile;
 	string outputfile;
 	inputfile="../data/WT931_100HZ_dynamic2.csv";
-	outputfile="../result/Mahony/"+inputfile.substr(8,strlen(inputfile.c_str())-12)+to_string(VERSION)+".csv";
+	outputfile="../result/CF/"+inputfile.substr(8,strlen(inputfile.c_str())-12)+to_string(VERSION)+".csv";
 	f(inputfile,outputfile);
 	system("pause");
 	return 0;
