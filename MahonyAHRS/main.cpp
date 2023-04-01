@@ -1,4 +1,4 @@
-#define VERSION 1
+#define VERSION 2
 
 #include "MahonyAHRS.h"
 #include <algorithm>
@@ -45,6 +45,7 @@ void f(string inputfile,string outputfile)
 		string time;
 		string device;
 		double accX,accY,accZ,gyroX,gyroY,gyroZ,gyroXrad,gyroYrad,gyroZrad;
+		double gyroXgt,gyroYgt,gyroZgt;
 		double dlta_time = 1.0 / IMU_RATE;
 		// double q0 = 0,q1 = 0,q2=0,q3=0;
 		double pitch = 0,roll = 0,yaw = 0;
@@ -70,8 +71,11 @@ void f(string inputfile,string outputfile)
 			gyroYrad = (gyroY / 180)*3.1415926;
 			gyroZrad = (gyroZ / 180)*3.1415926;
 
-			MahonyAHRSupdateIMU(gyroXrad,gyroYrad,gyroZrad,accX,accY,accZ);
+			gyroXgt = atof(strtok( NULL, delims ));
+			gyroYgt = atof(strtok( NULL, delims ));
+			gyroZgt = atof(strtok( NULL, delims ));
 
+			MahonyAHRSupdateIMU(gyroXrad,gyroYrad,gyroZrad,accX,accY,accZ);
 
 			quaternion2Euler(q0,q1,q2,q3,&pitch,&roll,&yaw);
 
@@ -87,8 +91,8 @@ int main(int argc, char* argv[])
 {
 	string inputfile;
 	string outputfile;
-	inputfile="./data/WT931_100HZ_dynamic2.csv";
-	outputfile=inputfile.substr(0,strlen(inputfile.c_str())-4)+"_Mahony_"+to_string(VERSION)+".csv";
+	inputfile="../data/WT931_100HZ_dynamic2.csv";
+	outputfile="../result/Mahony/"+inputfile.substr(8,strlen(inputfile.c_str())-12)+to_string(VERSION)+".csv";
 	f(inputfile,outputfile);
 	system("pause");
 	return 0;
