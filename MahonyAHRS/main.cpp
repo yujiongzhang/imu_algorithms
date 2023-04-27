@@ -1,4 +1,4 @@
-#define VERSION 4
+#define VERSION 1
 
 #include "MahonyAHRS.h"
 #include <algorithm>
@@ -14,15 +14,14 @@
 #include <math.h>
 using namespace std;
 
-#define _EULER_GT 1 //data中是否有输出的角度
+#define _EULER_GT 0 //data中是否有输出的角度
 
 #define MAX_LINE 50000
 #define IMU_RATE 100
 
-#define GYROX_BIAS 0
-#define GYROY_BIAS 0
-#define GYROZ_BIAS 0
-
+#define GYROX_BIAS 0.14413
+#define GYROY_BIAS 0.5950027
+#define GYROZ_BIAS 0.07859045
 
 void quaternion2Euler(double q0, double q1, double q2, double q3, double* _pitch, double* _roll, double* _yaw)
 {
@@ -103,7 +102,7 @@ int main(int argc, char* argv[])
 {
 	string inputfile;
 	string outputfile;
-	inputfile="../data/WT931_100HZ_dynamic2.csv";
+	inputfile="../data/WT9344M_100HZ_dynamic.csv";
 	outputfile="../result/Mahony/"+inputfile.substr(8,strlen(inputfile.c_str())-12)+to_string(VERSION)+".csv";
 	f(inputfile,outputfile);
 	system("pause");

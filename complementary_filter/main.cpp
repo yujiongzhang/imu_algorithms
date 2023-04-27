@@ -1,4 +1,4 @@
-#define VERSION 4
+#define VERSION 7
 
 #include "complementary_filter.h"
 #include <algorithm>
@@ -15,14 +15,15 @@
 using namespace std;
 using namespace imu_tools;
 
-#define _EULER_GT 1 //data中是否有输出的角度
+#define _EULER_GT 0 //data中是否有输出的角度
+#define _EXCEPTION_ZERO 0 //异常值的0的处理
 
 #define MAX_LINE 50000
 #define IMU_RATE 100
 
-#define GYROX_BIAS 0
-#define GYROY_BIAS 0
-#define GYROZ_BIAS 0
+#define GYROX_BIAS 0.14413
+#define GYROY_BIAS 0.5950027
+#define GYROZ_BIAS 0.07859045
 
 
 void quaternion2Euler(double q0, double q1, double q2, double q3, double* _pitch, double* _roll, double* _yaw)
@@ -49,7 +50,13 @@ void f(string inputfile,string outputfile)
 		string time;
 		string device;
 		double accX,accY,accZ,gyroX,gyroY,gyroZ,gyroXrad,gyroYrad,gyroZrad;
+
+		#if _EXCEPTION_ZERO
+		double accX_pre,accY_pre,accZ_pre,gyroX_pre,gyroY_pre,gyroZ_pre; //记录前一次数据，用于处理异常值
+		#endif
+
 		double gyroXgt,gyroYgt,gyroZgt;
+
 		double dlta_time = 1.0 / IMU_RATE;
 		// double q0 = 0,q1 = 0,q2=0,q3=0;
 		double pitch = 0,roll = 0,yaw = 0;
@@ -70,12 +77,28 @@ void f(string inputfile,string outputfile)
 			accX= atof(strtok( NULL, delims ))*9.81;		
 			accY= atof(strtok( NULL, delims ))*9.81;
 			accZ= atof(strtok( NULL, delims ))*9.81;
-			gyroX = atof(strtok( NULL, delims )) - GYROX_BIAS;
-			gyroY = atof(strtok( NULL, delims )) - GYROY_BIAS;
-			gyroZ = atof(strtok( NULL, delims )) - GYROZ_BIAS;
-			gyroXrad = (gyroX / 180)*3.1415926;
-			gyroYrad = (gyroY / 180)*3.1415926;
-			gyroZrad = (gyroZ / 180)*3.1415926;
+			gyroX = atof(strtok( NULL, delims ));
+			gyroY = atof(strtok( NULL, delims ));
+			gyroZ = atof(strtok( NULL, delims ));
+
+			#if _EXCEPTION_ZERO
+			if (accX == 0)
+			{
+				accX = accX_pre;
+			}
+			if (accY == 0 && accZ == 0 && gyroX == 0 && gyroY == 0 && gyroZ == 0)
+			{
+				accY = accY_pre;
+				accZ = accZ_pre;
+				gyroX = gyroX_pre;
+				gyroY = gyroY_pre;
+				gyroZ = gyroZ_pre;
+			}
+			#endif
+
+			gyroXrad = ((gyroX- GYROX_BIAS) / 180)*3.1415926;
+			gyroYrad = ((gyroY - GYROY_BIAS) / 180)*3.1415926;
+			gyroZrad = ((gyroZ- GYROZ_BIAS) / 180)*3.1415926;
 
 			#if _EULER_GT
 			gyroXgt = atof(strtok( NULL, delims ));
@@ -83,11 +106,23 @@ void f(string inputfile,string outputfile)
 			gyroZgt = atof(strtok( NULL, delims ));
 			#endif
 
+
+
 			filter.update(accX,accY,accZ,gyroXrad,gyroYrad,gyroZrad,dlta_time);
 
 			filter.getOrientation(q0,q1,q2,q3);
 
 			quaternion2Euler(q0,q1,q2,q3,&pitch,&roll,&yaw);
+
+
+			#if _EXCEPTION_ZERO
+			accX_pre = accX;
+			accY_pre = accY;
+			accZ_pre = accZ;
+			gyroX_pre = gyroX;
+			gyroY_pre = gyroY;
+			gyroZ_pre = gyroZ;
+			#endif
 
             outedit<<time<<','<<pitch<<','<<roll<<','<<yaw<<','<<wx_bias<<','<<wy_bias<<','<<wz_bias;
 
@@ -108,7 +143,7 @@ int main(int argc, char* argv[])
 {
 	string inputfile;
 	string outputfile;
-	inputfile="../data/WT931_100HZ_dynamic2.csv";
+	inputfile="../data/WT9344M_100HZ_dynamic.csv";
 	outputfile="../result/CF/"+inputfile.substr(8,strlen(inputfile.c_str())-12)+to_string(VERSION)+".csv";
 	f(inputfile,outputfile);
 	system("pause");
