@@ -1,0 +1,1 @@
+/usr/bin/c++    -rdynamic CMakeFiles/app.dir/main.cpp.o  -o app  -L/home/zyj/my_project/imu_algorithms_new/bin -Wl,-rpath,/home/zyj/my_project/imu_algorithms_new/bin -limu_alg 

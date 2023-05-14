@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/complementary_filter.h
+
+/home/zyj/my_project/imu_algorithms_new/main.cpp
+complementary_filter.h
+/home/zyj/my_project/imu_algorithms_new/complementary_filter.h
+algorithm
+-
+stdio.h
+-
+wchar.h
+-
+stdlib.h
+-
+time.h
+-
+string
+-
+cstring
+-
+iostream
+-
+fstream
+-
+time.h
+-
+math.h
+-
+
